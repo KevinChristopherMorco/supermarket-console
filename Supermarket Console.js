@@ -2,7 +2,6 @@ class Market {
     constructor() {
         this.marketItem = [{ item: 'APPLE', price: 50, quantity: 200 }, { item: 'MANGO', price: 120, quantity: 100 }, { item: 'GRAPE', price: 300, quantity: 400 }]
     }
-
     checkMarketInventory() {
         console.log('---------------------------------------------------')
         if (this.marketItem.length > 0) {
@@ -73,8 +72,6 @@ class Market {
         } else {
             console.log('Cannot remove an item, market inventory is empty')
         }
-
-
     }
 }
 
@@ -94,7 +91,7 @@ class Customer {
 
             if (!this.customerCart.cartItem.some(cartEl => cartEl.item == itemName)) {
                 if (this.market.marketItem.some(marketItemEl => marketItemEl.item == itemName)) {
-                    let itemQuantity = parseInt(prompt('Quantity:'))
+                    let itemQuantity = parseInt(prompt('Preferred Quantity:'))
                     if (this.market.marketItem[itemIndex].quantity >= itemQuantity) {
                         let price = this.market.marketItem[itemIndex].price
                         let cartItem = {
@@ -111,11 +108,9 @@ class Customer {
                         console.log('---------------------------------------------------')
                         this.market.marketItem[itemIndex].quantity = currentStock
                         this.customerCart.getCartDetails()
-
                     } else {
-                        console.log(`${itemName} has only ${this.market.marketItem[itemIndex].quantity} left`)
+                        console.log(`Invalid request, exceeded current ${itemName} stock`)
                     }
-
                 } else {
                     console.log(`${itemName} item does not exist in current market inventory\nChoose only in the list`)
                 }
@@ -139,7 +134,8 @@ class Customer {
         if (this.customerCart.cartItem.length > 0) {
             do {
                 console.log('---------------------------------------------------')
-                let removePrompt = parseInt(prompt('Select an option below:\n1. Remove all item\n2. Remove item quantity\nChoose an Action:'))
+                console.log('Select an option below:\n1. Remove all item\n2. Update item quantity')
+                let removePrompt = parseInt(prompt('Choose an Action:'))
                 console.log('---------------------------------------------------')
 
                 if (removePrompt == 1) {
@@ -164,19 +160,31 @@ class Customer {
                     }
                 } else if (removePrompt == 2) {
                     let removeCartItem = prompt('Select an item from your cart:').toUpperCase()
-                    let itemIndex = this.customerCart.cartItem.findIndex(cartEl => cartEl.item == removeCartItem)
-                    let removeItemQuantity = parseInt(prompt('Quantity:'))
-                    this.market.marketItem[itemIndex].quantity += removeItemQuantity
-                    this.customerCart.cartItem[itemIndex].quantity -= removeItemQuantity
-                    if (this.customerCart.cartItem.length == 0) {
-                        flag = false
-                    } else {
-                        let flagPrompt = prompt('Do you want to remove another item to your cart?[Y/N]:').toUpperCase()
-                        if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
-                            flag = true
+                    if (this.market.marketItem.some(marketItemEl => marketItemEl.item == removeCartItem)) {
+
+
+                        let itemIndex = this.customerCart.cartItem.findIndex(cartEl => cartEl.item == removeCartItem)
+                        let itemQuantity = parseInt(prompt('Preferred Quantity:'))
+                        let updateMarketItem = this.market.marketItem[itemIndex].quantity + (this.customerCart.cartItem[itemIndex].quantity - itemQuantity)
+                        if (updateMarketItem > 0) {
+                            this.market.marketItem[itemIndex].quantity = updateMarketItem
+                            this.customerCart.cartItem[itemIndex].quantity = itemQuantity
+
+                            if (this.customerCart.cartItem.length == 0) {
+                                flag = false
+                            } else {
+                                let flagPrompt = prompt('Do you want to remove another item to your cart?[Y/N]:').toUpperCase()
+                                if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
+                                    flag = true
+                                } else {
+                                    flag = false
+                                }
+                            }
                         } else {
-                            flag = false
+                            console.log('Invalid request, exceeded the item stock')
                         }
+                    }else{
+                        console.log(`Invalid request, ${removeCartItem} is not in your cart`)
                     }
 
                 }
@@ -201,10 +209,8 @@ class Customer {
             this.customerCart.grandTotal = 0
             this.customerCart.cartItem = []
         } else {
-            console.log(`Insufficient funds`)
+            console.log(`Invalid request, insufficient funds`)
         }
-
-
     }
 
     leaveMarket() {
@@ -235,7 +241,6 @@ class ShoppingCart {
         } else {
             console.log('Your cart is empty')
         }
-
     }
 
     getReceipt() {
@@ -244,7 +249,6 @@ class ShoppingCart {
             console.log(`Item:${this.cartItem[i].item} || Price:₱${this.cartItem[i].price} || Quantity:${this.cartItem[i].quantity} || Total: ₱${this.cartItem[i].grandTotal()}`)
         }
     }
-
 }
 
 console.log('---------------------------------------------------')
@@ -259,20 +263,27 @@ let customer = new Customer(market)
 
 if (userRoleChoice == 1) {
     let loop = true
-    while (loop == true) {
+    do {
         console.log('---------------------------------------------------')
         console.log('Choose your action:\n1. Add Market Items\n2. Remove Market Item')
         console.log('---------------------------------------------------')
         let adminChoice = parseInt(prompt('Choose the number of the above actions:'))
         console.log('---------------------------------------------------')
-        if (adminChoice == 1) {
-            market.addMarketItem()
-        } else if (adminChoice == 2) {
-            market.removeMarketItem()
-        } else {
-            console.log('Invalid Action')
+
+        switch (adminChoice) {
+            case 1:
+                market.addMarketItem()
+                break;
+            case 2:
+                market.removeMarketItem()
+            default:
+                console.log('Invalid Action')
+                break;
         }
-    }
+
+
+
+    } while (loop == true)
 
 } else if (userRoleChoice == 2) {
     let flag = true
@@ -302,6 +313,7 @@ if (userRoleChoice == 1) {
                 customer.leaveMarket()
                 break;
             default:
+                console.log('Invalid Action')
                 break;
         }
     } while (flag == true)
