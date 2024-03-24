@@ -1,3 +1,5 @@
+const prompt = require('prompt-sync')();
+
 class Market {
     constructor() {
         this.marketItem = [{ item: 'APPLE', price: 50, quantity: 200 }, { item: 'MANGO', price: 120, quantity: 100 }, { item: 'GRAPE', price: 300, quantity: 400 }]
@@ -38,12 +40,13 @@ class Market {
             this.checkMarketInventory()
 
             let flagPrompt = prompt('Do you want to add another item?[Y/N]:').toUpperCase()
-            if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
+            if (flagPrompt == 'Y' || flagPrompt == 'YES') {
                 flag = true
-            } else {
+            } else if (flagPrompt == 'N' || flagPrompt == 'NO') {
                 flag = false
+            } else {
+                console.log('Invalid response, type "Y" for Yes and "N" for No')
             }
-
         } while (flag == true)
     }
 
@@ -63,10 +66,12 @@ class Market {
                     console.log(`Invalid request, ${removeItem} is not in current inventory`)
                 }
                 let flagPrompt = prompt('Do you want to remove another item?[Y/N]:').toUpperCase()
-                if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
+                if (flagPrompt == 'Y' || flagPrompt == 'YES') {
                     flag = true
-                } else {
+                } else if (flagPrompt == 'N' || flagPrompt == 'NO') {
                     flag = false
+                } else {
+                    console.log('Invalid response, type "Y" for Yes and "N" for No')
                 }
             } while (flag == true)
         } else {
@@ -92,37 +97,46 @@ class Customer {
             if (!this.customerCart.cartItem.some(cartEl => cartEl.item == itemName)) {
                 if (this.market.marketItem.some(marketItemEl => marketItemEl.item == itemName)) {
                     let itemQuantity = parseInt(prompt('Preferred Quantity:'))
-                    if (this.market.marketItem[itemIndex].quantity >= itemQuantity) {
-                        let price = this.market.marketItem[itemIndex].price
-                        let cartItem = {
-                            item: itemName, price: price, quantity: itemQuantity, grandTotal: function () {
-                                return this.price * this.quantity
+                    if (!isNaN(itemQuantity)) {
+
+
+                        if (this.market.marketItem[itemIndex].quantity >= itemQuantity) {
+                            let price = this.market.marketItem[itemIndex].price
+                            let cartItem = {
+                                item: itemName, price: price, quantity: itemQuantity, grandTotal: function () {
+                                    return this.price * this.quantity
+                                }
                             }
+
+                            let currentStock = this.market.marketItem[itemIndex].quantity - itemQuantity
+
+                            this.customerCart.cartItem.push(cartItem)
+                            console.log('---------------------------------------------------')
+                            console.log(`${itemName} added to your cart`)
+                            console.log('---------------------------------------------------')
+                            this.market.marketItem[itemIndex].quantity = currentStock
+                            this.customerCart.getCartDetails()
+                        } else {
+                            console.log(`Invalid request, exceeded current ${itemName} stock`)
                         }
-
-                        let currentStock = this.market.marketItem[itemIndex].quantity - itemQuantity
-
-                        this.customerCart.cartItem.push(cartItem)
-                        console.log('---------------------------------------------------')
-                        console.log(`${itemName} added to your cart`)
-                        console.log('---------------------------------------------------')
-                        this.market.marketItem[itemIndex].quantity = currentStock
-                        this.customerCart.getCartDetails()
                     } else {
-                        console.log(`Invalid request, exceeded current ${itemName} stock`)
+                        console.log(`Invalid request, input must be a number`)
                     }
                 } else {
                     console.log(`${itemName} item does not exist in current market inventory\nChoose only in the list`)
                 }
+
             } else {
                 console.log(`${itemName} already in cart`)
             }
             console.log('---------------------------------------------------')
             let flagPrompt = prompt('Do you want to add another item to your cart?[Y/N]:').toUpperCase()
-            if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
+            if (flagPrompt == 'Y' || flagPrompt == 'YES') {
                 flag = true
-            } else {
+            } else if (flagPrompt == 'N' || flagPrompt == 'NO') {
                 flag = false
+            } else {
+                console.log('Invalid response, type "Y" for Yes and "N" for No')
             }
         } while (flag == true);
     }
@@ -152,38 +166,45 @@ class Customer {
                         flag = false
                     } else {
                         let flagPrompt = prompt('Do you want to remove another item to your cart?[Y/N]:').toUpperCase()
-                        if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
+                        if (flagPrompt == 'Y' || flagPrompt == 'YES') {
                             flag = true
-                        } else {
+                        } else if (flagPrompt == 'N' || flagPrompt == 'NO') {
                             flag = false
+                        } else {
+                            console.log('Invalid response, type "Y" for Yes and "N" for No')
                         }
                     }
                 } else if (removePrompt == 2) {
                     let removeCartItem = prompt('Select an item from your cart:').toUpperCase()
                     if (this.market.marketItem.some(marketItemEl => marketItemEl.item == removeCartItem)) {
+                        let marketItemIndex = this.market.marketItem.findIndex(marketEl => marketEl.item == removeCartItem)
+                        let cartItemIndex = this.customerCart.cartItem.findIndex(cartEl => cartEl.item == removeCartItem)
 
-
-                        let itemIndex = this.customerCart.cartItem.findIndex(cartEl => cartEl.item == removeCartItem)
                         let itemQuantity = parseInt(prompt('Preferred Quantity:'))
-                        let updateMarketItem = this.market.marketItem[itemIndex].quantity + (this.customerCart.cartItem[itemIndex].quantity - itemQuantity)
-                        if (updateMarketItem > 0) {
-                            this.market.marketItem[itemIndex].quantity = updateMarketItem
-                            this.customerCart.cartItem[itemIndex].quantity = itemQuantity
-
-                            if (this.customerCart.cartItem.length == 0) {
-                                flag = false
-                            } else {
-                                let flagPrompt = prompt('Do you want to remove another item to your cart?[Y/N]:').toUpperCase()
-                                if (flagPrompt == 'Y' || flagPrompt == 'Yes') {
-                                    flag = true
-                                } else {
+                        if (!isNaN(itemQuantity)) {
+                            let updateMarketItem = this.market.marketItem[marketItemIndex].quantity + (this.customerCart.cartItem[cartItemIndex].quantity - itemQuantity)
+                            if (updateMarketItem > 0) {
+                                this.market.marketItem[marketItemIndex].quantity = updateMarketItem
+                                this.customerCart.cartItem[cartItemIndex].quantity = itemQuantity
+                                if (this.customerCart.cartItem.length == 0) {
                                     flag = false
+                                } else {
+                                    let flagPrompt = prompt('Do you want to update the quantity of another item to your cart?[Y/N]:').toUpperCase()
+                                    if (flagPrompt == 'Y' || flagPrompt == 'YES') {
+                                        flag = true
+                                    } else if (flagPrompt == 'N' || flagPrompt == 'NO') {
+                                        flag = false
+                                    } else {
+                                        console.log('Invalid response, type "Y" for Yes and "N" for No')
+                                    }
                                 }
+                            } else {
+                                console.log('Invalid request, exceeded the item stock')
                             }
                         } else {
-                            console.log('Invalid request, exceeded the item stock')
+                            console.log(`Invalid request, input must be a number`)
                         }
-                    }else{
+                    } else {
                         console.log(`Invalid request, ${removeCartItem} is not in your cart`)
                     }
 
@@ -289,7 +310,7 @@ if (userRoleChoice == 1) {
     let flag = true
     do {
         console.log('---------------------------------------------------')
-        console.log('Choose your action:\n1. Add to Cart\n2. Remove in Cart\n3. Check my Cart\n4. Check Market Items\n5. Pay & Checkout\n6. Leave Market')
+        console.log('Choose your action:\n1. Add to Cart\n2. Remove/Update in Cart\n3. Check my Cart\n4. Check Market Items\n5. Pay & Checkout\n6. Leave Market')
         console.log('---------------------------------------------------')
         let customerChoice = parseInt(prompt('Choose the number of the above actions:'))
 
